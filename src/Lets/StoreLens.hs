@@ -105,6 +105,10 @@ data Lens a b =
   Lens
     (a -> Store b a)
 
+{-
+ data Store s a = Store (s -> a) s
+-}
+
 -- |
 --
 -- >>> get fstL (0 :: Int, "abc")

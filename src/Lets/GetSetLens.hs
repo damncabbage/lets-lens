@@ -137,13 +137,10 @@ setsetLaw l a b1 b2 =
 -- prop> let types = (x :: Int, y :: String) in modify fstL id (x, y) == (x, y)
 --
 -- prop> let types = (x :: Int, y :: String) in modify sndL id (x, y) == (x, y)
-modify ::
-  Lens a b
-  -> (b -> b)
-  -> a
-  -> a
-modify =
-  error "todo: modify"
+modify :: Lens a b -> (b -> b) -> a -> a
+modify lab fb a = set lab a (fb (get lab a))
+-- modify (Lens setter getter) modifier a = setter a (modifier (getter a))
+
 
 -- | An alias for @modify@.
 (%~) ::
@@ -168,12 +165,8 @@ infixr 4 %~
 --
 -- prop> let types = (x :: Int, y :: String) in set sndL (x, y) z == (sndL .~ z $ (x, y))
 (.~) ::
-  Lens a b
-  -> b
-  -> a
-  -> a
-(.~) =
-  error "todo: (.~)"
+  Lens a b -> b -> a -> a
+(.~) l b a = modify l (\_ -> b) a
 
 infixl 5 .~
 
@@ -187,14 +180,9 @@ infixl 5 .~
 --
 -- >>> fmodify fstL (\n -> bool Nothing (Just (n * 2)) (even n)) (11, "abc")
 -- Nothing
-fmodify ::
-  Functor f =>
-  Lens a b
-  -> (b -> f b)
-  -> a
-  -> f a
-fmodify =
-  error "todo: fmodify"
+fmodify :: Functor f => Lens a b -> (b -> f b) -> a -> f a
+fmodify (Lens s g) f a = fmap (s a) (f (g a))
+
 
 -- |
 --
@@ -224,10 +212,8 @@ infixl 5 |=
 -- prop> let types = (x :: Int, y :: String) in setgetLaw fstL (x, y) z
 --
 -- prop> let types = (x :: Int, y :: String) in setsetLaw fstL (x, y) z
-fstL ::
-  Lens (x, y) x
-fstL =
-  error "todo: fstL"
+fstL :: Lens (x, y) x
+fstL = Lens (\t b -> (b, snd t)) (fst)
 
 -- |
 --
@@ -241,8 +227,8 @@ fstL =
 -- prop> let types = (x :: Int, y :: String) in setsetLaw sndL (x, y) z
 sndL ::
   Lens (x, y) y
-sndL =
-  error "todo: sndL"
+sndL = Lens (\t b -> (fst t, b)) (snd)
+
 
 -- |
 --
@@ -267,8 +253,8 @@ mapL ::
   Ord k =>
   k
   -> Lens (Map k v) (Maybe v)
-mapL =
-  error "todo: mapL"
+mapL k =
+  map _bar k
 
 -- |
 --
@@ -307,8 +293,11 @@ compose ::
   Lens b c
   -> Lens a b
   -> Lens a c
-compose =
-  error "todo: compose"
+compose (Lens s1 g1) (Lens s2 g2) =
+  Lens
+    (\a c -> s2 a (s1 (g2 a) c))
+    (g1 . g2)
+
 
 -- | An alias for @compose@.
 (|.) ::
@@ -330,7 +319,7 @@ infixr 9 |.
 identity ::
   Lens a a
 identity =
-  error "todo: identity"
+  Lens (\_ y -> y) id
 
 -- |
 --
@@ -343,8 +332,10 @@ product ::
   Lens a b
   -> Lens c d
   -> Lens (a, c) (b, d)
-product =
-  error "todo: product"
+product (Lens s1 g1) (Lens s2 g2) =
+  Lens
+    (\(a,c) (b,d) -> _foo)
+    (\(a,c) -> (g1 a, g2 c))
 
 -- | An alias for @product@.
 (***) ::

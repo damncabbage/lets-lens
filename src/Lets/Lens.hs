@@ -110,7 +110,7 @@ fmapT ::
   (a -> b)
   -> t a
   -> t b
-fmapT =
+fmapT fab ta =
   error "todo: fmapT"
 
 -- | Let's refactor out the call to @traverse@ as an argument to @fmapT@.
@@ -141,7 +141,7 @@ type Set s t a b =
 -- unwrapping.
 sets ::
   ((a -> b) -> s -> t)
-  -> Set s t a b  
+  -> Set s t a b
 sets =
   error "todo: sets"
 
